@@ -480,7 +480,7 @@ augment_default_values(FieldInfos, Opts, Defs, TEnv) ->
             [case Field of
                  #?gpb_field{}=Field ->
                      Default = record_field_default(Field, Opts, Defs, TEnv),
-                     FI#field_info{default = Default};
+                     FI#field_info{default = Default, or_undefined = (Default == ["undefined"])};
                  #gpb_oneof{} ->
                      FI
              end
