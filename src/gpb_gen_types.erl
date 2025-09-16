@@ -478,9 +478,10 @@ augment_default_values(FieldInfos, Opts, Defs, TEnv) ->
     case MappingAndUnset of
         records ->
             [case Field of
-                 #?gpb_field{}=Field ->
+                 #?gpb_field{occurrence = Occurrence}=Field ->
                      Default = record_field_default(Field, Opts, Defs, TEnv),
-                     FI#field_info{default = Default};
+                     OrUndefined = Default == ["undefined"] andalso Occurrence == defaulty,
+                     FI#field_info{default = Default, or_undefined = OrUndefined};
                  #gpb_oneof{} ->
                      FI
              end
@@ -735,14 +736,14 @@ type_to_typestr(int32, _Defs, _AnRes, _TEnv)    -> "integer()";
 type_to_typestr(int64, _Defs, _AnRes, _TEnv)    -> "integer()";
 type_to_typestr(uint32, _Defs, _AnRes, _TEnv)   -> "non_neg_integer()";
 type_to_typestr(uint64, _Defs, _AnRes, _TEnv)   -> "non_neg_integer()";
-type_to_typestr(bool, _Defs, _AnRes, _TEnv)     -> "boolean() | 0 | 1";
+type_to_typestr(bool, _Defs, _AnRes, _TEnv)     -> "boolean()";
 type_to_typestr(fixed32, _Defs, _AnRes, _TEnv)  -> "non_neg_integer()";
 type_to_typestr(fixed64, _Defs, _AnRes, _TEnv)  -> "non_neg_integer()";
 type_to_typestr(sfixed32, _Defs, _AnRes, _TEnv) -> "integer()";
 type_to_typestr(sfixed64, _Defs, _AnRes, _TEnv) -> "integer()";
 type_to_typestr(float, _Defs, _AnRes, _TEnv)    -> float_spec();
 type_to_typestr(double, _Defs, _AnRes, _TEnv)   -> float_spec();
-type_to_typestr(string, _Defs, _AnRes, _TEnv)   -> "unicode:chardata()";
+type_to_typestr(string, _Defs, _AnRes, _TEnv)   -> "unicode:unicode_binary()";
 type_to_typestr(bytes, _Defs, _AnRes, _TEnv)    -> "iodata()";
 type_to_typestr({enum,E}, Defs, _AnRes, TEnv) ->
     enum_typestr(E, Defs, TEnv);

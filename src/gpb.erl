@@ -519,7 +519,7 @@ decode_type(FieldType, Bin, MsgDefs) ->
         string ->
             {Len, Rest} = decode_varint(Bin, 64),
             <<Utf8Str:Len/binary, Rest2/binary>> = Rest,
-            {unicode:characters_to_list(Utf8Str, unicode), Rest2};
+            {unicode:characters_to_binary(Utf8Str), Rest2};
         bytes ->
             {Len, Rest} = decode_varint(Bin, 64),
             <<Bytes:Len/binary, Rest2/binary>> = Rest,
@@ -957,12 +957,10 @@ encode_value(Value, Type, MsgDefs) ->
             en_vi(Value);
         uint64 ->
             en_vi(Value);
-        bool ->
-            if Value       -> en_vi(1);
-               not Value   -> en_vi(0);
-               Value =:= 1 -> en_vi(1);
-               Value =:= 0 -> en_vi(0)
-            end;
+        bool -> case Value of
+                  true  -> en_vi(1);
+                  false -> en_vi(0)
+                end;
         {enum, _EnumName}=Key ->
             N = if is_atom(Value) ->
                         {Key, EnumValues} = lists:keyfind(Key, 1, MsgDefs),
@@ -986,8 +984,7 @@ encode_value(Value, Type, MsgDefs) ->
                 _           -> <<Value:64/float-little>>
             end;
         string ->
-            Utf8 = unicode:characters_to_binary(Value),
-            [en_vi(byte_size(Utf8)), Utf8];
+            [en_vi(byte_size(Value)), Value];
         bytes ->
             if is_binary(Value) -> [en_vi(byte_size(Value)), Value];
                is_list(Value) -> [en_vi(iolist_size(Value)), Value]
